@@ -1,0 +1,91 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?  @unique
+  phone     String
+  address   String
+  businessType String? // "retail", "wholesale", "restaurant", etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  orders    Order[]
+  
+  @@map("customers")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  category    String   // "kampung", "negeri", "olahan"
+  price       Float    // price per unit
+  unit        String   // "lusin", "karton", "kg"
+  stock       Int      @default(0)
+  isActive    Boolean  @default(true)
+  image       String?  // image URL
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  orderItems  OrderItem[]
+  
+  @@map("products")
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique
+  customerId    String
+  totalAmount   Float
+  status        String      @default("pending") // "pending", "confirmed", "delivered", "cancelled"
+  deliveryAddress String
+  deliveryDate  DateTime?
+  notes         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  customer      Customer    @relation(fields: [customerId], references: [id])
+  orderItems    OrderItem[]
+  
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  unitPrice Float
+  
+  order     Order   @relation(fields: [orderId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+  
+  @@map("order_items")
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String
+  subject   String
+  message   String
+  status    String   @default("unread") // "unread", "read", "replied"
+  createdAt DateTime @default(now())
+  
+  @@map("contacts")
+}
